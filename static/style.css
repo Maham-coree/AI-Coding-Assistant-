@@ -1,0 +1,308 @@
+body{ background: linear-gradient(to right, #4facfe, #00f2fe) ; color:black; font-family: Arial ,sans-serif; margin:0; padding: 30px;}
+.container{width:80% ; margin:40px auto; max-width:900px;  background:white; padding:30px; border-radius:15px; transition:0.3s ease; box-shadow: 0 0 20px rgba(0,0,0,0.2);}
+h1{text-align: center; color:#2563eb; font-size:45px}
+p{text-align:left;}
+h2{color:#1e3a8a;}
+textarea{ width: 100%; height:140px; padding:15px; font-size:18px; border:1px solid #ddd; border-radius:10px; resize:none; outline:none; box-sizing:border-box;}
+ textarea:focus{
+
+border:2px solid #2563eb;
+
+box-shadow:0 0 8px rgba(37,99,235,.3);
+
+}
+.button-group{
+    display:flex;
+    gap:12px;
+    margin-top:20px;
+    flex-wrap:wrap;
+}
+
+.button-group button{
+    margin:0;
+    min-width:140px;
+    padding:12px 22px;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:bold;
+    transition:.3s;
+}
+
+button{
+    padding:12px 25px;
+    border:none;
+    border-radius:10px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:bold;
+    letter-spacing:.5px;
+    transition:.20s;
+}
+
+button:hover{
+    background:#1d4ed8;
+    transform:translateY(-3px);
+    box-shadow:0 8px 20px rgba(0,0,0,.25);
+}
+.question{background:white; color:black; padding: 20px; border-radius: 10px; margin-top:30px}
+.question p{ text-align:left;}
+.response{ margin-top:20px; padding:20px; background:#fff; border-left:5px solid #2563eb; border-radius:12px; max-height:550px; overflow:hidden ; white-space:pre-wrap; overflow-wrap:break-word; animation:fadeIn .5s ease; box-shadow:0 8px 18px rgba(0,0,0,0.12); box-sizing:border-box; } 
+.response_text{  word-break: break-word; overflow-wrap: break-word;}
+.response p{ margin:0; color:#222; font-size:18px;line-height:1.7; text-align:left;  word-break:break-word; overflow-wrap:break-word; }
+@keyframes fadeIn{
+from{
+opacity:0; transform:translate(20px);
+}
+to{
+opacity:1; transform:translate(0);
+}
+}
+      button{ display:block; margin: 20px auto; transition:0.3s;}
+footer{ text-align:center; padding: 15px; color:white; font-size: 18px;margin-top: 40px;}
+.header{text-align:center; margin-bottom: 30px;}
+.header h1{ color:#2563eb; font-size:40px; margin-bottom:10px;}
+.header p{color:#666; font-size:18px;}
+.error{ background:#ffe5e5; color:#b00020; padding:15px; border-radius:8px; margin-top:20px;}
+.spinner{ display: inline-block; width:18px; height:18px; border: 3px solid white; border-top: 3px solid transparent; border-radius:50%; animation: spin 1s linear infinite; margin-right:8px;}
+@keyframes spin{ 
+0%{
+transform:rotate(0deg);
+}
+100%{
+transform:rotate(360deg);
+}
+}
+/* Dark Mode */
+.dark-mode{background:#121212; color:white;}
+.dark-mode .container{ background:#1e1e1e; color:white;}
+.dark-mode textarea{ background:#2a2a2a; color:white; border: 1px solid #555;}
+.dark-mode .question,
+.dark-mode.response{ background:#2d2d2d; color:white;}
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode p{color:white;}
+#darkModeBtn{ float:right; margin-bottom: 15px;}
+/* ===== Dark Mode Response Fix ===== */
+
+.dark-mode .response{
+    background:#2d2d2d;
+    color:white;
+}
+
+.dark-mode .response h2{
+    color:#ffffff;
+}
+
+.dark-mode .response_text{
+    color:#ffffff;
+}
+
+.dark-mode .response p{
+    color:#ffffff;
+}
+
+.dark-mode .question{
+    background:#2d2d2d;
+    color:white;
+}
+
+.dark-mode .question p{
+    color:white;
+}
+
+.dark-mode textarea{
+    background:#1f1f1f;
+    color:white;
+}
+
+.dark-mode footer p{
+    color:white !important;
+}
+/* ===== Navbar Fix ===== */
+.navbar{ display: flex; justify-content:space-between; align-items: center; margin-bottom: 25px; flex-wrap:wrap;
+    gap:15px; padding-bottom:15px;
+    border-bottom:2px solid #eee;}
+.navbar h1{ margin:0; color:#2563eb; font-size:35px;}
+#darkModeBtn{ margin:0;}
+/* =====Button Group =====*/
+
+/* ===== Main Layout ===== */
+
+.main-layout{
+    display:flex;
+    gap:20px;
+}
+
+/* ===== Sidebar ===== */
+
+.sidebar{
+    width:260px;
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 0 10px rgba(0,0,0,.15);
+}
+
+.sidebar h2{
+    margin-top:0;
+    text-align:center;
+}
+
+/* ===== Content ===== */
+
+.content{
+    flex:1;
+}
+.history-item{
+    background:#f4f4f4;
+    padding:12px;
+    margin-bottom:10px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:0.3s;
+    word-break:break-word;
+    border-left:4px solid #2563eb;
+    font-size:15px;
+}
+
+.history-item:hover{
+    background:#2563eb;
+    color:white;
+    transform:translateX(5px);
+    box-shadow:0 5px 12px rgba(0,0,0,0.2);
+}
+
+.dark-mode .history-item{
+    background:#333;
+    color:white;
+}
+
+.dark-mode .history-item:hover{
+    background:#2563eb;
+}
+#searchHistory{
+    width:100%;
+    padding:10px;
+    margin:10px 0 15px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    box-sizing:border-box;
+}
+
+.dark-mode #searchHistory{
+    background:#222;
+    color:white;
+    border:1px solid #555;
+}
+#historyList{
+    margin-top:15px;
+}
+
+.history-item{
+    background:white;
+    padding:10px;
+    margin-bottom:8px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+.history-item:hover{
+    background:#2563eb;
+    color:white;
+}
+.footer-text{
+
+color:black;
+
+font-size:20px;
+
+text-align:center;
+
+margin:0;
+
+}
+pre{
+    width:100%;
+    max-width:100%;
+    white-space:pre-wrap;
+    border-radius:10px;
+    margin-top:10px;
+    box-sizing:border-box;
+}
+
+code{
+    display:block;
+    width:100%;
+    box-sizing:border-box;
+}
+pre code{
+    display:block;
+    padding:15px;
+    border-radius:10px;
+}
+.response pre{
+
+background:#111827;
+
+color:white;
+
+padding:20px;
+
+border-radius:10px;
+
+overflow-x:auto;
+overflow-y:auto;
+
+max-height:450px;
+
+font-size:15px;
+
+}
+/* Toast Notification */
+
+#toast{
+
+    position:fixed;
+
+    bottom:30px;
+
+    right:30px;
+
+    background:#2563eb;
+
+    color:white;
+
+    padding:15px 25px;
+
+    border-radius:10px;
+
+    font-size:16px;
+
+    font-weight:bold;
+
+    opacity:0;
+
+    visibility:hidden;
+
+    transition:.4s;
+
+    z-index:9999;
+
+}
+
+#toast.show{
+
+    opacity:1;
+
+    visibility:visible;
+
+}
+
+.tagline{
+    color:#666;
+    font-size:15px;
+    margin-bottom:20px;
+}

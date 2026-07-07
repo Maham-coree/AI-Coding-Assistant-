@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Coding Assistant</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+<script>
+      if(localStorage.getItem("theme") === "dark"){
+      document.documentElement.classList.add("dark-mode");
+      }
+</script>
+    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
+    <link rel="stylesheet"
+     href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+</head>
+<body>
+    <div class="container"> 
+    <div class="main-layout">
+    <div class="sidebar">
+        <h2>📝 Chat History</h2>
+        <input type="text"
+         id= "searchHistory"
+         placeholder= "🔍 Search History..." 
+         onkeyup ="searchHistory()">
+         <div class="button-group">
+        <div id="historyList"></div> 
+        <button type="button" onclick="clearHistory()">
+            Clear History
+        </button>
+        </div>
+    </div>
+    <div class="content">
+    <div class="navbar">
+    <h1>🤖 AI Coding Assistant</h1>
+    <button id="darkModeBtn" type="button">
+        Dark Mode
+    </button>
+    </div>
+    <form action="/chat" method="POST">
+        <p class="tagline">
+          💡 Ask any coding question and get instant AI-powered answers.
+        </p>
+        <textarea name="user_input" placeholder="Ask anything about python, HTML, CSS Java......"> {{user_input}}</textarea>
+        <br><br>
+        <div class="button-group">
+            <button type="submit" id="askBtn">
+                ✨ Ask AI
+            </button>
+            <button type="button" id="clearBtn">
+              🗑 Clear
+            </button>
+        </div>
+    </form>
+    {% if user_input %}
+    <div class="question">
+        <h2> Your Question</h2>
+        <p>{{ user_input }}</p>
+    </div>
+    {% endif %}
+    {% if ai_response and "Error" in ai_response %}
+    <div class="error">
+        {{ ai_response }}
+    </div>
+    {% endif %}
+    {% if ai_response %}
+    <div class="response">
+        <h2> AI Response</h2>
+        <pre>
+          <code class="language-python" id="response_text">{{ ai_response }}</code>
+        </pre>
+    </div>
+    <div class="button-group">
+        <button onclick="copyText()">
+         📋 Copy Response
+        </button>
+        <button type="button" onclick="copyCode()">
+          💻 Copy Code
+        </button>
+    
+        <button id="speakBtn" type="button" onclick="speakResponse()">
+          🔊 Speak
+        </button>
+    </div>
+    {% endif %}
+     </div>
+     </div>
+     </div>
+<footer>
+    <p class="footer-text">
+      Made by Maham Waseem ✨ | Powered by Gemini AI
+    </p>
+</footer>
+<script 
+src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+</script>
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+<div id="toast"></div>
+</body>
+</html>
