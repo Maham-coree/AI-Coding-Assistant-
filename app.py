@@ -1,5 +1,5 @@
+import os
 from flask import Flask , render_template , request
-import os 
 from dotenv import load_dotenv
 from google import genai  
 load_dotenv()
@@ -39,7 +39,7 @@ def chat():
         "index.html",
         ai_response=ai_response,
          user_input=user_input) 
-import os
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
