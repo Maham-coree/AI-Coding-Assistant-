@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Edit snippet · AI Coding Assistant{% endblock %}
+{% block content %}
+<header class="topbar"><div><p class="eyebrow">Your code library</p><h1>Edit snippet</h1></div><a class="secondary-button button-link" href="{{ url_for('snippets') }}">Back to snippets</a></header>
+<section class="content-card">
+    <form method="post" class="template-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="field"><span>Title</span><input name="title" maxlength="100" required value="{{ snippet.title }}"></label>
+        <label class="field"><span>Language</span><select name="language">{% for language in languages %}<option value="{{ language }}" {{ 'selected' if snippet.language == language else '' }}>{{ language|title }}</option>{% endfor %}</select></label>
+        <label class="field"><span>Code</span><textarea name="code" maxlength="50000" required>{{ snippet.code }}</textarea></label>
+        <button class="primary-button" type="submit">Save changes</button>
+    </form>
+</section>
+{% endblock %}

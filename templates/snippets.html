@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Saved snippets · AI Coding Assistant{% endblock %}
+{% block content %}
+<header class="topbar"><div><p class="eyebrow">Your code library</p><h1>Saved snippets</h1><p class="muted">Private code snippets saved from your workspace.</p></div><a class="secondary-button button-link" href="{{ url_for('home') }}">Back to workspace</a></header>
+<section class="content-card">
+    {% if snippets %}
+    <div class="snippet-list">
+        {% for snippet in snippets %}
+        <article class="snippet-card">
+            <div class="library-heading"><div><h2>{{ snippet.title }}</h2><span class="category-pill">{{ snippet.language|title }}</span></div>
+                <div class="button-row"><button type="button" class="secondary-button copy-snippet" data-snippet-id="{{ snippet.id }}">Copy</button><a class="secondary-button button-link" href="{{ url_for('edit_snippet', snippet_id=snippet.id) }}">Edit</a>
+                <form method="post" action="{{ url_for('delete_snippet', snippet_id=snippet.id) }}" data-confirm="Delete this saved snippet? This cannot be undone."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="secondary-button danger-button" type="submit">Delete</button></form></div>
+            </div>
+            <pre><code>{{ snippet.code }}</code></pre>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><h2>No saved snippets yet</h2><p>Save code from the workspace with the “Save code snippet” button.</p><a class="primary-button button-link" href="{{ url_for('home') }}">Open workspace</a></div>
+    {% endif %}
+</section>
+{% endblock %}

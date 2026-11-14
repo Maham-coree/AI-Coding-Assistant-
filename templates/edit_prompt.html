@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Edit prompt · AI Coding Assistant{% endblock %}
+{% block content %}
+<header class="topbar"><div><p class="eyebrow">Reusable workflows</p><h1>Edit template</h1></div><a class="secondary-button button-link" href="{{ url_for('prompts') }}">Back to prompts</a></header>
+<section class="content-card">
+    <form method="post" class="template-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="field"><span>Title</span><input name="title" maxlength="100" required value="{{ template.title }}"></label>
+        <label class="field"><span>Category</span><select name="category">{% for category in categories %}<option {{ 'selected' if template.category == category else '' }}>{{ category }}</option>{% endfor %}</select></label>
+        <label class="field"><span>Description</span><input name="description" maxlength="300" value="{{ template.description }}"></label>
+        <label class="field"><span>Reusable prompt</span><textarea name="prompt" maxlength="20000" required>{{ template.prompt }}</textarea></label>
+        <div class="field-row">
+            <label class="field"><span>AI mode</span><select name="mode">{% for mode in modes %}<option value="{{ mode }}" {{ 'selected' if template.mode == mode else '' }}>{{ mode|title }}</option>{% endfor %}</select></label>
+            <label class="field"><span>Programming language</span><select name="language">{% for language in languages %}<option value="{{ language }}" {{ 'selected' if template.language == language else '' }}>{{ language|title }}</option>{% endfor %}</select></label>
+        </div>
+        <button class="primary-button" type="submit">Save changes</button>
+    </form>
+</section>
+{% endblock %}

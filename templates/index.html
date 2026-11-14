@@ -1,102 +1,64 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>AI Coding Assistant</title>
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
-<script>
-      if(localStorage.getItem("theme") === "dark"){
-      document.documentElement.classList.add("dark-mode");
-      }
-</script>
-    <link rel="stylesheet" href="{{url_for('static', filename='style.css')}}">
-    <link rel="stylesheet"
-     href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-</head>
-<body>
-    <div class="container"> 
-    <div class="main-layout">
-    <div class="sidebar">
-        <h2>📝 Chat History</h2>
-        <input type="text"
-         id= "searchHistory"
-         placeholder= "🔍 Search History..." 
-         onkeyup ="searchHistory()">
-         <div class="button-group">
-        <div id="historyList"></div> 
-        <button type="button" onclick="clearHistory()">
-            Clear History
-        </button>
+{% extends "base.html" %}
+{% block title %}Workspace · AI Coding Assistant{% endblock %}
+{% block content %}
+<header class="topbar">
+    <div><p class="eyebrow">Productivity toolkit</p><h1>Build smarter with AI</h1></div>
+    <div class="topbar-actions">
+        <span id="apiStatus" class="status-pill">Checking connection...</span>
+        <button id="darkModeBtn" type="button" class="ghost-button">Toggle theme</button>
+        <button id="clearCurrentChatBtn" type="button" class="secondary-button">Clear current chat</button>
+    </div>
+</header>
+<form id="assistantForm" action="{{ url_for('chat') }}" method="post" class="workspace-form" data-template-id="{{ fill_template_id or '' }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="conversation_id" id="conversationId">
+    <input type="hidden" name="mode" id="modeInput" value="generate">
+    <div class="field-row">
+        <label class="field compact-field"><span>Programming language</span>
+            <select name="language" id="languageSelect">
+                {% for language in languages %}
+                <option value="{{ language }}" {{ 'selected' if language == 'python' else '' }}>{{ {'csharp': 'C#', 'cpp': 'C++', 'javascript': 'JavaScript', 'typescript': 'TypeScript', 'sql': 'SQL', 'html': 'HTML', 'css': 'CSS'}.get(language, language|title) }}</option>
+                {% endfor %}
+            </select>
+        </label>
+    </div>
+    <div class="mode-panel">
+        <p class="panel-label">AI modes</p>
+        <div class="mode-list">
+            {% for mode in modes %}
+            <button type="button" class="mode-button {{ 'active' if loop.first else '' }}" data-mode="{{ mode }}">{{ mode|title }}</button>
+            {% endfor %}
         </div>
     </div>
-    <div class="content">
-    <div class="navbar">
-    <h1>🤖 AI Coding Assistant</h1>
-    <button id="darkModeBtn" type="button">
-        Dark Mode
-    </button>
+    <label class="field"><span>Task description</span>
+        <textarea id="userInput" name="user_input" maxlength="20000" placeholder="Describe the feature, bug, or code you want help with..."></textarea>
+    </label>
+    <label class="field"><span>Code snippet (optional)</span>
+        <textarea id="codeInput" name="code_input" maxlength="50000" placeholder="Paste existing code here if you want to explain, debug, optimize, or convert it..."></textarea>
+    </label>
+    <div class="prompt-chips">
+        <button type="button" class="example-button" data-prompt="Build a Flask REST API with validation and clear error handling.">Build an API</button>
+        <button type="button" class="example-button" data-prompt="Explain this function step by step and point out possible edge cases.">Explain code</button>
+        <button type="button" class="example-button" data-prompt="Find the bug in this function and show a corrected version.">Fix bug</button>
+        <button type="button" class="example-button" data-prompt="Review this SQL query and explain performance considerations.">Improve query</button>
     </div>
-    <form action="/chat" method="POST">
-        <p class="tagline">
-          💡 Ask any coding question and get instant AI-powered answers.
-        </p>
-        <textarea name="user_input" placeholder="Ask anything about python, HTML, CSS Java......"> {{user_input}}</textarea>
-        <br><br>
-        <div class="button-group">
-            <button type="submit" id="askBtn">
-                ✨ Ask AI
-            </button>
-            <button type="button" id="clearBtn">
-              🗑 Clear
-            </button>
+    <div class="button-row">
+        <button type="submit" id="askBtn" class="primary-button">✨ Generate</button>
+        <button type="button" id="clearBtn" class="secondary-button">Clear form</button>
+        <button type="button" id="saveSnippetBtn" class="secondary-button">Save code snippet</button>
+    </div>
+</form>
+<div id="conversationList" class="conversation-list" aria-live="polite"></div>
+<section id="outputPanel" class="output-panel empty">
+    <div class="output-header">
+        <h2>AI response</h2>
+        <div class="output-actions">
+            <button type="button" id="copyResponseBtn" class="ghost-button small-button" title="Copy response" aria-label="Copy response">▣</button>
+            <button type="button" id="copyCodeBtn" class="ghost-button small-button" title="Copy code" aria-label="Copy code">⌘</button>
+            <button type="button" id="downloadBtn" class="ghost-button small-button" title="Download response" aria-label="Download response">↓</button>
+            <button type="button" id="speakBtn" class="ghost-button small-button" title="Speak response" aria-label="Speak response">🔊</button>
         </div>
-    </form>
-    {% if user_input %}
-    <div class="question">
-        <h2> Your Question</h2>
-        <p>{{ user_input }}</p>
     </div>
-    {% endif %}
-    {% if ai_response and "Error" in ai_response %}
-    <div class="error">
-        {{ ai_response }}
-    </div>
-    {% endif %}
-    {% if ai_response %}
-    <div class="response">
-        <h2> AI Response</h2>
-        <pre>
-          <code class="language-python" id="response_text">{{ ai_response }}</code>
-        </pre>
-    </div>
-    <div class="button-group">
-        <button onclick="copyText()">
-         📋 Copy Response
-        </button>
-        <button type="button" onclick="copyCode()">
-          💻 Copy Code
-        </button>
-    
-        <button id="speakBtn" type="button" onclick="speakResponse()">
-          🔊 Speak
-        </button>
-    </div>
-    {% endif %}
-     </div>
-     </div>
-     </div>
-<footer>
-    <p class="footer-text">
-      Made by Maham Waseem ✨ | Powered by Gemini AI
-    </p>
-</footer>
-<script 
-src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
-</script>
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script src="{{ url_for('static', filename='script.js') }}"></script>
-<div id="toast"></div>
-</body>
-</html>
+    <div id="responseText" class="markdown-body empty-state">No response yet. Ask a question or paste code to get started.</div>
+</section>
+{% endblock %}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en" class="{{ 'dark-mode' if current_user.is_authenticated and current_user.theme == 'dark' else '' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{% block title %}AI Coding Assistant{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+{% if current_user.is_authenticated %}
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand-block" href="{{ url_for('home') }}">
+                <span class="brand-mark">AI</span>
+                <span><span class="eyebrow">Developer workspace</span><strong>AI Coding Assistant</strong></span>
+            </a>
+            <a href="{{ url_for('home', new='1') }}" class="primary-button new-conversation-link">+ New conversation</a>
+            <nav class="side-nav" aria-label="Workspace">
+                <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' else '' }}">Workspace</a>
+                <a href="{{ url_for('prompts') }}" class="{{ 'active' if request.endpoint in ['prompts', 'edit_prompt'] else '' }}">Saved prompts</a>
+                <a href="{{ url_for('snippets') }}" class="{{ 'active' if request.endpoint in ['snippets', 'edit_snippet'] else '' }}">Saved snippets</a>
+                <a href="{{ url_for('analytics') }}" class="{{ 'active' if request.endpoint == 'analytics' else '' }}">Analytics</a>
+                <a href="{{ url_for('settings') }}" class="{{ 'active' if request.endpoint == 'settings' else '' }}">Profile & settings</a>
+            </nav>
+            <section class="history-panel" aria-label="Recent conversations">
+                <div class="panel-header"><h3>Recent chats</h3></div>
+                <input type="search" id="searchHistory" placeholder="Search conversations..." aria-label="Search conversations">
+                <div id="historyList" class="history-list"></div>
+            </section>
+            <div class="sidebar-account">
+                <span class="account-avatar">{{ current_user.name[:1]|upper }}</span>
+                <span class="account-label"><strong>{{ current_user.name }}</strong><small>{{ current_user.email }}</small></span>
+                <form action="{{ url_for('logout') }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="mini-button" type="submit" aria-label="Log out">Log out</button>
+                </form>
+            </div>
+        </aside>
+        <main class="workspace">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-stack" aria-live="polite">
+                        {% for category, message in messages %}
+                            <p class="flash-message {{ category }}">{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+{% else %}
+    <main class="auth-shell">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-stack" aria-live="polite">
+                    {% for category, message in messages %}
+                        <p class="flash-message {{ category }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        {% block auth_content %}{% endblock %}
+    </main>
+{% endif %}
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Saved prompts · AI Coding Assistant{% endblock %}
+{% block content %}
+<header class="topbar"><div><p class="eyebrow">Reusable workflows</p><h1>Saved prompts</h1><p class="muted">Only you can see and manage these templates.</p></div></header>
+<section class="content-card">
+    <h2>Create a prompt template</h2>
+    <form method="post" class="template-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="field"><span>Title</span><input name="title" maxlength="100" required></label>
+        <label class="field"><span>Category</span><select name="category" required>{% for category in categories %}<option>{{ category }}</option>{% endfor %}</select></label>
+        <label class="field"><span>Description</span><input name="description" maxlength="300"></label>
+        <label class="field"><span>Reusable prompt</span><textarea name="prompt" maxlength="20000" required></textarea></label>
+        <div class="field-row">
+            <label class="field"><span>AI mode</span><select name="mode">{% for mode in modes %}<option value="{{ mode }}">{{ mode|title }}</option>{% endfor %}</select></label>
+            <label class="field"><span>Programming language</span><select name="language">{% for language in languages %}<option value="{{ language }}">{{ language|title }}</option>{% endfor %}</select></label>
+        </div>
+        <button class="primary-button" type="submit">Save template</button>
+    </form>
+</section>
+<section class="content-card library-card">
+    <div class="library-heading"><div><h2>Your templates</h2><p class="muted">{{ templates|length }} shown</p></div>
+        <form method="get" class="search-form"><input type="search" name="q" value="{{ search }}" placeholder="Search templates" aria-label="Search templates"><select name="category" aria-label="Filter by category"><option value="">All categories</option>{% for category in categories %}<option value="{{ category }}" {{ 'selected' if selected_category == category else '' }}>{{ category }}</option>{% endfor %}</select><button class="secondary-button" type="submit">Search</button></form>
+    </div>
+    {% if templates %}
+    <div class="template-grid">
+        {% for template in templates %}
+        <article class="template-card">
+            <div class="template-card-heading"><span class="category-pill">{{ template.category }}</span><h3>{{ template.title }}</h3></div>
+            <p class="muted">{{ template.description or 'No description' }}</p>
+            <p class="template-preview">{{ template.prompt }}</p>
+            <small class="muted">{{ template.mode|title }} · {{ template.language|title }}</small>
+            <div class="button-row">
+                <button type="button" class="primary-button use-template" data-template-id="{{ template.id }}">Use template</button>
+                <a class="secondary-button button-link" href="{{ url_for('edit_prompt', template_id=template.id) }}">Edit</a>
+                <form method="post" action="{{ url_for('delete_prompt', template_id=template.id) }}" data-confirm="Delete this prompt template? This cannot be undone.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="secondary-button danger-button" type="submit">Delete</button>
+                </form>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}<p class="empty-state">No templates match your search. Create one above or clear the filters.</p>{% endif %}
+</section>
+{% endblock %}

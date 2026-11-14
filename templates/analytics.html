@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Analytics · AI Coding Assistant{% endblock %}
+{% block content %}
+<header class="topbar"><div><p class="eyebrow">Your activity</p><h1>Analytics</h1><p class="muted">Private usage totals for your account. Prompts and code are never shown here.</p></div></header>
+<section class="metric-grid">
+    <article class="metric-card"><span class="metric-label">Conversations</span><strong>{{ conversations_count }}</strong><small>Saved in your workspace</small></article>
+    <article class="metric-card"><span class="metric-label">AI requests</span><strong>{{ total_requests }}</strong><small>Recorded from your workspace activity</small></article>
+    <article class="metric-card"><span class="metric-label">Code responses</span><strong>{{ generated_code_responses }}</strong><small>AI responses containing a code block</small></article>
+    <article class="metric-card"><span class="metric-label">Generate requests</span><strong>{{ dict(mode_data).get('generate', 0) }}</strong><small>Requests using Generate mode</small></article>
+    <article class="metric-card"><span class="metric-label">Debug requests</span><strong>{{ dict(mode_data).get('debug', 0) }}</strong><small>Requests using Debug mode</small></article>
+    <article class="metric-card"><span class="metric-label">Explain requests</span><strong>{{ dict(mode_data).get('explain', 0) }}</strong><small>Requests using Explain mode</small></article>
+    <article class="metric-card"><span class="metric-label">Optimize requests</span><strong>{{ dict(mode_data).get('optimize', 0) }}</strong><small>Requests using Optimize mode</small></article>
+    <article class="metric-card"><span class="metric-label">Convert requests</span><strong>{{ dict(mode_data).get('convert', 0) }}</strong><small>Requests using Convert mode</small></article>
+</section>
+<div class="analytics-grid">
+    <section class="content-card"><h2>AI mode usage</h2>
+        {% if mode_data %}
+        <div class="bar-list">{% for mode, count in mode_data %}
+            <div class="bar-item"><div><span>{{ mode|title }}</span><strong>{{ count }}</strong></div><div class="bar-track"><span style="width: {{ (count * 100 / max_modes)|round(1) }}%"></span></div></div>
+        {% endfor %}</div>
+        {% else %}<p class="empty-state">No AI activity yet. Submit a request from your workspace to start building your analytics.</p>{% endif %}
+    </section>
+    <section class="content-card"><h2>Programming language usage</h2>
+        {% if language_data %}
+        <div class="bar-list">{% for language, count in language_data %}
+            <div class="bar-item"><div><span>{{ language|title }}</span><strong>{{ count }}</strong></div><div class="bar-track"><span style="width: {{ (count * 100 / max_languages)|round(1) }}%"></span></div></div>
+        {% endfor %}</div>
+        {% else %}<p class="empty-state">No language activity yet.</p>{% endif %}
+    </section>
+    <section class="content-card activity-card"><h2>Requests over the last 7 days</h2>
+        {% if recent_activity_count %}
+        <div class="activity-chart" role="img" aria-label="Daily AI requests over the last seven days">
+            {% for day in activity_days %}
+            <div class="activity-column"><strong>{{ day.count }}</strong><span class="activity-bar" style="height: {{ (day.count * 100 / max_activity) if max_activity else 0 }}%"></span><small>{{ day.label }}</small></div>
+            {% endfor %}
+        </div>
+        {% else %}<p class="empty-state">No AI requests were recorded in the last seven days. A recent activity chart will appear after your next request.</p>{% endif %}
+    </section>
+</div>
+{% endblock %}

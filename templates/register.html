@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Create account · AI Coding Assistant{% endblock %}
+{% block auth_content %}
+<section class="auth-card">
+    <a class="brand-block auth-brand" href="{{ url_for('register') }}">
+        <span class="brand-mark">AI</span>
+        <span><span class="eyebrow">Private developer workspace</span><strong>AI Coding Assistant</strong></span>
+    </a>
+    <h1>Create your account</h1>
+    <p class="muted">Your conversations and saved work stay private to your account.</p>
+    <form method="post" class="stack-form" data-disable-on-submit>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="field"><span>Full name</span><input type="text" name="name" autocomplete="name" required minlength="2" maxlength="80"></label>
+        <label class="field"><span>Email address</span><input type="email" name="email" autocomplete="email" required maxlength="254"></label>
+        <label class="field"><span>Password</span><input type="password" name="password" autocomplete="new-password" required minlength="12" aria-describedby="passwordHelp"><small id="passwordHelp" class="muted">At least 12 characters with uppercase, lowercase, and a number.</small></label>
+        <label class="field"><span>Confirm password</span><input type="password" name="confirm_password" autocomplete="new-password" required minlength="12"></label>
+        <button type="submit" class="primary-button">Create account</button>
+    </form>
+    <p class="auth-switch">Already registered? <a href="{{ url_for('login') }}">Log in</a></p>
+</section>
+{% endblock %}
