@@ -32,7 +32,12 @@ load_dotenv()
 
 app = Flask(__name__)
 app_env = os.getenv("APP_ENV", "development").strip().lower()
-is_production = app_env == "production" or os.getenv("RENDER", "").lower() == "true"
+is_vercel = os.getenv("VERCEL", "").strip().lower() in {"1", "true"}
+is_production = (
+    app_env == "production"
+    or os.getenv("RENDER", "").lower() == "true"
+    or is_vercel
+)
 secret_key = (os.getenv("SECRET_KEY") or "").strip() or None
 configured_database_url = (os.getenv("DATABASE_URL") or "").strip() or None
 if is_production and (
@@ -64,7 +69,8 @@ app.config.update(
     WTF_CSRF_HEADERS=["X-CSRFToken"],
     RATELIMIT_STORAGE_URI=os.getenv("REDIS_URL", "memory://"),
 )
-os.makedirs(app.instance_path, exist_ok=True)
+if database_url.startswith("sqlite:"):
+    os.makedirs(app.instance_path, exist_ok=True)
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
