@@ -32,6 +32,7 @@ import app
 assert app.is_production
 assert app.app.config["SQLALCHEMY_DATABASE_URI"] == %r
 assert app.app.config["SESSION_COOKIE_SECURE"]
+assert app.app.instance_path.replace("\\\\", "/").endswith("/tmp/instance")
 """ % database_url
 
         result = subprocess.run(

@@ -98,7 +98,7 @@ Database and serverless considerations
 - Use a hosted PostgreSQL database for production data.
 - Do not rely on a local SQLite file or Vercel's temporary filesystem for persistent user data.
 - Vercel's `VERCEL=1` environment variable enables production checks, so set both `SECRET_KEY` and a PostgreSQL `DATABASE_URL`; SQLite remains available for local development.
-- The application creates its instance directory only when using SQLite locally. Authentication sessions use signed cookies, and the application does not write uploads or user data to the function filesystem.
+- On Vercel, Flask's instance path is `/tmp/instance`; the directory is created only when SQLite is used locally. Production data remains in PostgreSQL. Authentication sessions use signed cookies, and the application does not write uploads or user data to the function filesystem.
 - Vercel Functions are serverless and may start or stop between requests. Store conversations, users, prompts, snippets, and settings in the configured database.
 - Database connection handling should be suitable for serverless execution.
 - Run database migrations as a controlled deployment step; do not assume that a local database automatically exists in Vercel.

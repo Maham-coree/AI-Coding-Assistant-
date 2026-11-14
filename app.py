@@ -30,9 +30,12 @@ from flask_wtf.csrf import CSRFProtect
 
 load_dotenv()
 
-app = Flask(__name__)
-app_env = os.getenv("APP_ENV", "development").strip().lower()
 is_vercel = os.getenv("VERCEL", "").strip().lower() in {"1", "true"}
+app = Flask(
+    __name__,
+    instance_path=os.path.abspath("/tmp/instance") if is_vercel else None,
+)
+app_env = os.getenv("APP_ENV", "development").strip().lower()
 is_production = (
     app_env == "production"
     or os.getenv("RENDER", "").lower() == "true"
