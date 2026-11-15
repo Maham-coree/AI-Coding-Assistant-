@@ -1,142 +1,170 @@
-AI Coding Assistant
-A web-based AI Coding Assistant built with Python, Flask, HTML, CSS, and JavaScript. It provides a focused workspace for common coding tasks, conversation management, and personal productivity.
-Features
-AI Coding Modes
-- Generate: Create code from a written requirement.
-- Explain: Understand code and programming concepts.
-- Debug: Review code and help identify errors.
-- Optimize: Suggest improvements to code readability and efficiency.
-- Convert: Convert code between supported programming languages.
-Personal Workspace
-- User registration, login, and logout
-- Protected pages and user-specific data
-- Conversation history and message management
-- Create, edit, search, and reuse saved prompt templates
-- Save, edit, search, and manage code snippets
-- Analytics dashboard based on recorded application activity
-- User settings and theme preferences
-Security and Data Management
-- Password hashing
-- Session-based authentication
-- Authorization checks for protected features
-- User data separation
-- Database models and migrations
-- Environment-based configuration for sensitive values
-Technology Stack
+## AI Coding Assistant
+**A web-based coding assistant that helps users generate, understand, debug, optimize, and convert code through a simple interface.**
+
+## Table of Contents
+- Overview
+- Features
+- AI Modes
+- Technology Stack
+- Project Structure
+- Getting Started
+- Environment Variables
+- Database Setup
+- Running Tests
+- Deployment
+- Security
+
+
+Overview
+AI Coding Assistant is designed to make common programming tasks easier. Users can work with code in one place, save useful results, organize conversations, and reuse prompt templates.
+
+The application provides five coding modes and a workspace for managing coding tasks and saved content.
+
+## Features
+- User authentication: Register, log in, and log out securely.
+- Password protection: Passwords are stored as hashes rather than plain text.
+- Five coding modes: Generate, Explain, Debug, Optimize, and Convert.
+- Conversation management: Create and access coding conversations.
+- Saved snippets: Save and manage useful code snippets.
+- Prompt templates: Create, search, save, and reuse prompt templates.
+- User preferences: Store supported interface and account preferences.
+- Analytics dashboard: View activity information recorded by the application.
+- Responsive interface: Use the application on desktop and smaller screens.
+- Password recovery: Request a time-limited, single-use reset link without revealing whether an account exists.
+
+## AI Modes
+Mode	Purpose
+Generate	Create code from a task description.
+Explain	Understand what a code snippet does.
+Debug	Review code and help identify possible errors.
+Optimize	Suggest ways to improve code readability or efficiency.
+Convert	Convert code from one programming language or format to another.
+
+
+## Technology Stack
 - Backend: Python, Flask
 - Frontend: HTML, CSS, JavaScript
 - AI service: Google Gemini API
-- Database: SQLAlchemy with PostgreSQL for hosted deployment
-- Migrations: Flask-Migrate / Alembic
-- Deployment: Vercel
-Project Structure
+- Database: PostgreSQL for hosted deployment; SQLite may be used for local development where configured
+- ORM: SQLAlchemy
+- Database migrations: Flask-Migrate and Alembic
+- Authentication and security: Flask session management and Werkzeug password hashing
+- Application server: Gunicorn
+- Deployment: Render via Gunicorn; Vercel requires additional function configuration
+
+## Project Structure
+The project is organized into backend application code, frontend templates and static assets, database migrations, and tests. Exact filenames and folders may vary as the project develops.
 AI-Coding-Assistant/
 ├── app.py
-├── requirements.txt
 ├── .env.example
-├── .gitignore
-├── vercel.json
-├── api/
-│   └── index.py
-├── migrations/
-├── static/
-│   ├── script.js
-│   └── style.css
 ├── templates/
-│   ├── index.html
-│   ├── login.html
-│   ├── register.html
-│   ├── settings.html
-│   ├── analytics.html
-│   ├── prompts.html
-│   └── snippets.html
-└── tests/
-The exact files and folders may vary as the project develops. Keep this section aligned with the actual repository structure.
+├── static/
+├── migrations/
+├── tests/
+├── requirements.txt
+└── README.md
 
-Run Locally
+## Getting Started
 1. Clone the repository
 git clone https://github.com/Maham-coree/AI-Coding-Assistant-.git
 cd AI-Coding-Assistant-
-2. Create and activate a virtual environment
-Windows (PowerShell):
+2. Create a virtual environment
+Windows:
 python -m venv venv
-.\venv\Scripts\Activate.ps1
+venv\Scripts\activate
+macOS / Linux:
+python3 -m venv venv
+source venv/bin/activate
 3. Install dependencies
 pip install -r requirements.txt
 4. Configure environment variables
-Create a .env file in the project root and add the required values:
-APP_ENV=development
-SECRET_KEY=your-long-random-secret-key
-DATABASE_URL=your-database-connection-string
-GEMINI_API_KEY=your-gemini-api-key
-Use the variable names required by the current application configuration. Do not commit .env or real credentials to GitHub.
-5. Apply database migrations
+Create a .env file in the project root and add the required values. See the Environment Variables section below.
+5. Run the application
+Use the Flask command configured for the project:
+flask --app app run
+Then open the local address shown in the terminal.
+
+## Environment Variables
+Configure the following environment variables in your local .env file and in your deployment platform:
+| Variable | Purpose |
+| --- | --- |
+| `APP_ENV` | Sets the application environment, such as `development` or `production`. |
+| `SECRET_KEY` | Protects Flask sessions. Use a long, random value. |
+| `DATABASE_URL` | Connection URL for the configured database. Use PostgreSQL in production; local development can use SQLite. |
+| `GEMINI_API_KEY` | API key used to connect to Gemini. |
+| `REDIS_URL` | Optional shared rate-limit storage for multi-worker deployments; the application can run without Redis. |
+| `SMTP_HOST` | SMTP server for password-reset email. |
+| `SMTP_PORT` | SMTP port; defaults to `587` (STARTTLS). Port `465` uses implicit TLS. |
+| `SMTP_USERNAME` | SMTP authentication username. |
+| `SMTP_PASSWORD` | SMTP authentication password. |
+| `MAIL_DEFAULT_SENDER` | Sender address for reset email. |
+| `PUBLIC_BASE_URL` | Public application origin used to construct reset links; production must use HTTPS. |
+
+The SMTP settings are optional for running the application, but `SMTP_HOST`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_DEFAULT_SENDER`, and `PUBLIC_BASE_URL` must be valid to deliver reset links. `SMTP_PORT` defaults to 587 (STARTTLS); port 465 uses implicit TLS. Production `PUBLIC_BASE_URL` must be the public HTTPS origin. Without complete SMTP settings, the application does not create or send a reset token. On delivery failure it invalidates the token, logs only the exception class, and keeps the response generic; it does not claim that mail was sent. Reset tokens are stored as hashes, expire after 30 minutes, and are single-use.
+Do not publish your .env file, database credentials, secret key, or API key. Make sure .env is excluded from Git.
+
+## Rate Limiting
+The existing registration, login, forgot-password, and reset-password limits are enforced by Flask-Limiter. Set `REDIS_URL` to a provider-supplied Redis URL to share counters across application instances; use the provider's TLS URL (`rediss://`) when required. Redis stores rate-limit counters only, not account data, passwords, reset tokens, conversations, prompts, or snippets.
+
+Without `REDIS_URL`, local development uses in-process memory. If configured Redis is unreachable, the limiter logs a warning and falls back to in-process memory so the application remains available and continues enforcing the same limits on that instance. This fallback is not shared across instances and is less reliable in serverless deployments until Redis recovers. Redis connectivity has not been verified in this environment.
+
+## Database Setup
+The application uses SQLAlchemy and Flask-Migrate/Alembic. Local development defaults to SQLite; production requires the configured PostgreSQL `DATABASE_URL` and will not fall back to SQLite.
+
+After confirming that `DATABASE_URL` targets the intended database, apply migrations as a controlled deployment step:
+```sh
 flask --app app db upgrade
-6. Start the application
-python app.py
-Open http://127.0.0.1:5000 in your browser.
-Deployment on Vercel
-This project uses Flask, so it must be configured for Vercel's Python Functions runtime. A normal Flask development server command is not used as the Vercel start command.
-Deployment preparation
-1. Push the project to the GitHub repository.
-2. Make sure the repository contains the Vercel Python entry point and Vercel configuration required by the project.
-3. Import the GitHub repository into Vercel.
-4. Configure the project settings according to the repository's Vercel configuration.
-5. Add the required environment variables in the Vercel project settings.
-6. Deploy and review the deployment logs.
-Environment variables
-Configure the following values in Vercel → Project → Settings → Environment Variables:
-Variable	Purpose
-APP_ENV	Set to production
-SECRET_KEY	A strong, randomly generated secret used by the application
-DATABASE_URL	Connection string for the hosted PostgreSQL database
-GEMINI_API_KEY	API key used by the Gemini integration
+```
+Do not run migrations automatically during application import.
 
+## Running Tests
+Run the automated suite with:
+```sh
+python -m unittest discover -s tests -v
+```
+The tests set a unique temporary SQLite `DATABASE_URL` before importing the Flask app and abort if the initialized SQLAlchemy engine does not use that isolated file. They never use the deployment database.
 
-Add any other variables only if the application actually requires them. Never place real secret values in this README or commit them to GitHub.
-Database and serverless considerations
-- Use a hosted PostgreSQL database for production data.
-- Do not rely on a local SQLite file or Vercel's temporary filesystem for persistent user data.
-- Vercel's `VERCEL=1` environment variable enables production checks, so set both `SECRET_KEY` and a PostgreSQL `DATABASE_URL`; SQLite remains available for local development.
-- On Vercel, Flask's instance path is `/tmp/instance`; the directory is created only when SQLite is used locally. Production data remains in PostgreSQL. Authentication sessions use signed cookies, and the application does not write uploads or user data to the function filesystem.
-- Vercel Functions are serverless and may start or stop between requests. Store conversations, users, prompts, snippets, and settings in the configured database.
-- Database connection handling should be suitable for serverless execution.
-- Run database migrations as a controlled deployment step; do not assume that a local database automatically exists in Vercel.
-- Verify that session and cookie settings work correctly over HTTPS and across serverless requests.
-Vercel deployment requires the correct Python Function entry point and configuration for this Flask application. Confirm these files and the current Vercel Python runtime requirements before deploying. Do not assume that a Render Procfile or Gunicorn start command is sufficient for Vercel.
+Production smoke checks against the configured PostgreSQL database and Gemini service passed: the app used PostgreSQL, all model tables and columns matched, Alembic was at revision `74b3af18c2de`, a live request through `/chat` returned a response, and registration/login, conversation/prompt/snippet round-trips, account isolation, and password reset with mocked email delivery succeeded. Smoke-test database writes were rolled back. Actual SMTP delivery and a live Redis connection have not been tested because those services are not configured.
 
-Testing
-Run the automated tests locally:
-python -m pytest -q
-Also test the main user flows in a browser:
-- Register, log in, and log out
-- Open each of the five AI modes
-- Create and revisit conversations
-- Create, edit, search, and reuse prompt templates
-- Create, edit, and search snippets
-- Review analytics and settings
-- Confirm that one user's private data is not visible to another user
-Before production use, verify the Gemini API integration and hosted PostgreSQL connection using the deployment environment variables.
-Current Scope and Notes
-- Email verification and password recovery may not be included in the current version.
-- Gemini API and hosted PostgreSQL behavior must be verified in the deployed environment.
-- Optional services should only be configured if the application actually uses them.
-- Update this section as features are completed and tested.
-Security Reminders
-- Keep .env out of GitHub.
-- Never publish API keys, database passwords, or the Flask secret key.
-- Use a strong, unique SECRET_KEY in production.
-- Use HTTPS and secure cookie settings in production.
-- Keep dependencies updated and review authentication, authorization, and user-data isolation before public release.
-License
-No license has been specified for this project. Unless a license is added, the default copyright rules apply.
+## Deployment
+### Render
+Create a Render Web Service with:
+- Build command: `pip install -r requirements.txt`
+- Start command: `gunicorn app:app`
+
+Configure `APP_ENV=production`, `SECRET_KEY`, `DATABASE_URL` (hosted PostgreSQL), and `GEMINI_API_KEY` in the Render environment. Add the SMTP variables above to enable password-reset email.
+
+### Vercel
+`api/index.py` exports the existing Flask application, and `vercel.json` routes requests to that Python Function. The app selects `/tmp/instance` on Vercel and requires PostgreSQL for persistent data; it will not fall back to SQLite in production.
+
+To deploy:
+1. Import this repository into Vercel with the repository root as the project root.
+2. Set `APP_ENV=production`, `SECRET_KEY` (random, at least 32 characters), `DATABASE_URL` (hosted PostgreSQL), and `GEMINI_API_KEY` in Vercel Project Settings → Environment Variables.
+3. If using shared rate limiting, set `REDIS_URL` to the URL provided by your Redis service. Without it, the application uses process-local rate limits.
+4. To enable password reset email, also set `SMTP_HOST`, `SMTP_PORT` (587 STARTTLS or 465 implicit TLS), `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_DEFAULT_SENDER`, and `PUBLIC_BASE_URL` to the deployed HTTPS origin.
+5. Deploy from Vercel and inspect build/runtime logs. Do not put credentials in the repository or rely on a local `.env` file.
+6. Smoke-test health, authentication, reset email delivery, AI modes, and database-backed features on the deployed URL. Creating these files does not establish that a deployment succeeded.
+
+Do not run database migrations during import. Only run a migration as a separate, controlled operation after verifying that the configured `DATABASE_URL` points to the intended database.
+
+## Security
+- Passwords should be stored using secure password hashing.
+- Keep secret keys, API keys, and database credentials out of source control.
+- Use environment variables for deployment configuration.
+- Use HTTPS for the deployed application.
+- Keep dependencies updated and review application logs when diagnosing errors.
+
 
 ## Author
 
 **Maham Waseem**
+
 
 Passionate about AI, Python, and software development.
 
 GitHub: <https://github.com/Maham-coree>
 
 LinkedIn: <https://www.linkedin.com/in/maham-waseem-89735134a>
+
+Project: AI Coding Assistant
+Repository: GitHub – AI Coding Assistant

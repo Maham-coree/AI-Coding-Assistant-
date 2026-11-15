@@ -344,6 +344,7 @@ html.dark-mode .history-panel input, html.dark-mode .field textarea, html.dark-m
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    margin-top: -6px;
 }
 
 .example-button {
@@ -649,6 +650,16 @@ html.dark-mode .markdown-body {
     font-weight: 700;
 }
 
+.auth-forgot-link {
+    margin: 14px 0 0;
+    text-align: right;
+}
+
+.auth-forgot-link a {
+    color: var(--primary-strong);
+    font-weight: 600;
+}
+
 .field input, .field select, .search-form input, .search-form select {
     width: 100%;
     min-height: 48px;
@@ -740,6 +751,27 @@ html.dark-mode .markdown-body {
 
 .content-card h2 {
     margin-top: 0;
+}
+
+.snippet-create-form {
+    display: grid;
+    gap: 16px;
+    padding-bottom: 22px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--border);
+}
+
+.snippet-create-form .field-row {
+    gap: 14px;
+}
+
+.snippet-create-form .field {
+    flex: 1;
+    min-width: 0;
+}
+
+.snippet-create-form .primary-button {
+    justify-self: start;
 }
 
 .bar-list {

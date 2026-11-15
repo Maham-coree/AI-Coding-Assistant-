@@ -382,6 +382,26 @@ function wireCommonControls() {
             }
         });
     });
+    document.getElementById("createSnippetForm")?.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const submitButton = form.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        try {
+            await jsonRequest("/api/snippets", {
+                method: "POST",
+                body: {
+                    title: form.elements.title.value.trim(),
+                    code: form.elements.code.value.trim(),
+                    language: form.elements.language.value,
+                },
+            });
+            window.location.reload();
+        } catch (error) {
+            showToast(error.message);
+            submitButton.disabled = false;
+        }
+    });
     document.querySelectorAll(".use-template").forEach((button) => {
         button.addEventListener("click", () => {
             window.location.assign(`/?template=${encodeURIComponent(button.dataset.templateId)}`);
@@ -411,11 +431,6 @@ function wireWorkspaceControls() {
         }
     });
     document.getElementById("clearCurrentChatBtn")?.addEventListener("click", clearCurrentChat);
-    document.getElementById("clearBtn")?.addEventListener("click", () => {
-        document.getElementById("userInput").value = "";
-        document.getElementById("codeInput").value = "";
-        document.getElementById("userInput").focus();
-    });
     document.getElementById("searchHistory")?.addEventListener("input", renderHistory);
 
     document.querySelectorAll(".mode-button").forEach((button) => {
@@ -423,13 +438,6 @@ function wireWorkspaceControls() {
             modeInput.value = button.dataset.mode;
             document.querySelectorAll(".mode-button").forEach((item) => item.classList.toggle("active", item === button));
             if (askButton) askButton.textContent = `✨ ${button.textContent.trim()}`;
-        });
-    });
-    document.querySelectorAll(".example-button").forEach((button) => {
-        button.addEventListener("click", () => {
-            const input = document.getElementById("userInput");
-            input.value = button.dataset.prompt || "";
-            input.focus();
         });
     });
     form.addEventListener("submit", submitAssistantForm);
@@ -446,25 +454,6 @@ function wireWorkspaceControls() {
             showToast(error.message);
         }
     });
-    document.getElementById("saveSnippetBtn")?.addEventListener("click", async () => {
-        const code = document.getElementById("codeInput").value.trim();
-        if (!code) {
-            showToast("Add code to the snippet field first.");
-            return;
-        }
-        const title = window.prompt("Name this code snippet");
-        if (!title?.trim()) return;
-        try {
-            await jsonRequest("/api/snippets", {
-                method: "POST",
-                body: { title: title.trim(), code, language: document.getElementById("languageSelect").value },
-            });
-            showToast("Snippet saved to your library.");
-        } catch (error) {
-            showToast(error.message);
-        }
-    });
-
     document.getElementById("copyResponseBtn")?.addEventListener("click", async () => {
         const text = document.getElementById("responseText")?.innerText || "";
         if (!text || text.includes("No response yet")) return showToast("Nothing to copy yet.");

@@ -3,6 +3,20 @@
 {% block content %}
 <header class="topbar"><div><p class="eyebrow">Your code library</p><h1>Saved snippets</h1><p class="muted">Private code snippets saved from your workspace.</p></div><a class="secondary-button button-link" href="{{ url_for('home') }}">Back to workspace</a></header>
 <section class="content-card">
+    <form id="createSnippetForm" class="snippet-create-form">
+        <div class="field-row">
+            <label class="field"><span>Title</span><input type="text" name="title" maxlength="100" required></label>
+            <label class="field"><span>Language</span>
+                <select name="language">
+                    {% for language in languages %}
+                    <option value="{{ language }}">{{ language|title }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+        </div>
+        <label class="field"><span>Code</span><textarea name="code" maxlength="50000" required></textarea></label>
+        <button type="submit" class="primary-button">Add snippet</button>
+    </form>
     {% if snippets %}
     <div class="snippet-list">
         {% for snippet in snippets %}
@@ -16,7 +30,7 @@
         {% endfor %}
     </div>
     {% else %}
-    <div class="empty-state"><h2>No saved snippets yet</h2><p>Save code from the workspace with the “Save code snippet” button.</p><a class="primary-button button-link" href="{{ url_for('home') }}">Open workspace</a></div>
+    <div class="empty-state"><h2>No saved snippets yet</h2><p>Add your first code snippet using the form above.</p></div>
     {% endif %}
 </section>
 {% endblock %}

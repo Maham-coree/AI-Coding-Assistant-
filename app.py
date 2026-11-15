@@ -1,8 +1,14 @@
+import hashlib
 import os
 import re
+import secrets
+import smtplib
+import ssl
 import uuid
 from datetime import datetime, timedelta, timezone
+from email.message import EmailMessage
 from functools import wraps
+from urllib.parse import urlsplit
 
 import bleach
 import markdown
@@ -60,6 +66,14 @@ if database_url.startswith("postgres://"):
 elif database_url.startswith("postgresql://"):
     database_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)
 
+redis_url = (os.getenv("REDIS_URL") or "").strip()
+rate_limit_storage_uri = redis_url or "memory://"
+rate_limit_storage_options = (
+    {"socket_connect_timeout": 1, "socket_timeout": 1}
+    if redis_url
+    else {}
+)
+
 app.config.update(
     SECRET_KEY=secret_key or os.urandom(32),
     SQLALCHEMY_DATABASE_URI=database_url,
@@ -70,7 +84,9 @@ app.config.update(
     SESSION_COOKIE_SECURE=is_production,
     PERMANENT_SESSION_LIFETIME=timedelta(days=7),
     WTF_CSRF_HEADERS=["X-CSRFToken"],
-    RATELIMIT_STORAGE_URI=os.getenv("REDIS_URL", "memory://"),
+    RATELIMIT_STORAGE_URI=rate_limit_storage_uri,
+    RATELIMIT_STORAGE_OPTIONS=rate_limit_storage_options,
+    RATELIMIT_IN_MEMORY_FALLBACK_ENABLED=bool(redis_url),
 )
 if database_url.startswith("sqlite:"):
     os.makedirs(app.instance_path, exist_ok=True)
@@ -207,6 +223,18 @@ class SavedSnippet(db.Model):
     owner = db.relationship("User", back_populates="snippets")
 
 
+class PasswordResetToken(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = db.Column(db.String(64), nullable=False)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=False, index=True)
+    used_at = db.Column(db.DateTime(timezone=True))
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    __table_args__ = (
+        db.UniqueConstraint("token_hash", name="uq_password_reset_token_hash"),
+    )
+
+
 @login_manager.user_loader
 def load_user(user_id):
     try:
@@ -248,6 +276,91 @@ def normalize_email(email):
         return validate_email(email.casefold(), check_deliverability=False).normalized
     except EmailNotValidError:
         return None
+
+
+def password_reset_mail_settings():
+    smtp_host = (os.getenv("SMTP_HOST") or "").strip()
+    smtp_username = (os.getenv("SMTP_USERNAME") or "").strip()
+    smtp_password = os.getenv("SMTP_PASSWORD") or ""
+    sender = (os.getenv("MAIL_DEFAULT_SENDER") or "").strip()
+    public_base_url = (os.getenv("PUBLIC_BASE_URL") or "").strip().rstrip("/")
+    if not all((smtp_host, smtp_username, smtp_password, sender, public_base_url)):
+        return None
+
+    try:
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+    except ValueError:
+        return None
+    if not 1 <= smtp_port <= 65535:
+        return None
+
+    try:
+        parsed_base_url = urlsplit(public_base_url)
+    except ValueError:
+        return None
+    if (
+        parsed_base_url.scheme not in {"http", "https"}
+        or not parsed_base_url.netloc
+        or parsed_base_url.path not in {"", "/"}
+        or parsed_base_url.query
+        or parsed_base_url.fragment
+        or parsed_base_url.username
+        or parsed_base_url.password
+        or (is_production and parsed_base_url.scheme != "https")
+    ):
+        return None
+
+    return {
+        "host": smtp_host,
+        "port": smtp_port,
+        "username": smtp_username,
+        "password": smtp_password,
+        "sender": sender,
+        "public_base_url": public_base_url,
+    }
+
+
+def send_password_reset_email(recipient, reset_url, settings):
+    message = EmailMessage()
+    message["Subject"] = "Reset your AI Coding Assistant password"
+    message["From"] = settings["sender"]
+    message["To"] = recipient
+    message.set_content(
+        "A password reset was requested for your AI Coding Assistant account.\n\n"
+        f"Use this link within 30 minutes to choose a new password:\n{reset_url}\n\n"
+        "If you did not request this, you can ignore this email."
+    )
+
+    tls_context = ssl.create_default_context()
+    if settings["port"] == 465:
+        server = smtplib.SMTP_SSL(
+            settings["host"],
+            settings["port"],
+            timeout=10,
+            context=tls_context,
+        )
+    else:
+        server = smtplib.SMTP(settings["host"], settings["port"], timeout=10)
+    with server as smtp:
+        if settings["port"] != 465:
+            smtp.starttls(context=tls_context)
+        smtp.login(settings["username"], settings["password"])
+        smtp.send_message(message)
+
+
+def hash_password_reset_token(token):
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def find_valid_password_reset(token, now=None):
+    if not token or len(token) > 256:
+        return None
+    now = now or datetime.now(timezone.utc)
+    return PasswordResetToken.query.filter(
+        PasswordResetToken.token_hash == hash_password_reset_token(token),
+        PasswordResetToken.used_at.is_(None),
+        PasswordResetToken.expires_at > now,
+    ).first()
 
 
 def sanitize_html(text):
@@ -433,6 +546,103 @@ def login():
             login_user(user, fresh=True)
             return redirect(url_for("home"))
     return render_template("login.html")
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+@limiter.limit("3 per hour", methods=["POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = normalize_email((request.form.get("email") or "").strip())
+        user = User.query.filter_by(email=email).first() if email else None
+        if user:
+            mail_settings = password_reset_mail_settings()
+            if mail_settings is None:
+                app.logger.warning("Password reset email is not configured; no reset was sent.")
+            else:
+                now = datetime.now(timezone.utc)
+                PasswordResetToken.query.filter(
+                    PasswordResetToken.user_id == user.id,
+                    PasswordResetToken.used_at.is_(None),
+                ).update({PasswordResetToken.used_at: now}, synchronize_session=False)
+                token = secrets.token_urlsafe(32)
+                token_record = PasswordResetToken(
+                    user_id=user.id,
+                    token_hash=hash_password_reset_token(token),
+                    expires_at=now + timedelta(minutes=30),
+                )
+                db.session.add(token_record)
+                db.session.commit()
+                token_record_id = token_record.id
+                reset_url = (
+                    f"{mail_settings['public_base_url']}"
+                    f"{url_for('reset_password', token=token)}"
+                )
+                try:
+                    send_password_reset_email(email, reset_url, mail_settings)
+                except (OSError, smtplib.SMTPException, ValueError) as exc:
+                    PasswordResetToken.query.filter_by(
+                        id=token_record_id,
+                        used_at=None,
+                    ).update(
+                        {PasswordResetToken.used_at: datetime.now(timezone.utc)},
+                        synchronize_session=False,
+                    )
+                    db.session.commit()
+                    app.logger.error("Password reset email delivery failed (%s).", type(exc).__name__)
+        flash(
+            "If an account exists for that email address, we will process the reset request. "
+            "If no message arrives, try again later.",
+            "success",
+        )
+        return redirect(url_for("forgot_password"))
+    return render_template("forgot_password.html")
+
+
+@app.route("/reset-password", methods=["GET", "POST"])
+@limiter.limit("10 per hour", methods=["POST"])
+def reset_password():
+    token = (
+        request.form.get("token") if request.method == "POST"
+        else request.args.get("token")
+    ) or ""
+    token_record = find_valid_password_reset(token)
+    if token_record is None:
+        flash("This password reset link is invalid or expired. Request a new one.", "error")
+        return render_template("reset_password.html", token="", token_valid=False)
+    if request.method == "GET":
+        return render_template("reset_password.html", token=token, token_valid=True)
+
+    password = request.form.get("password") or ""
+    confirmation = request.form.get("confirm_password") or ""
+    password_error = validate_password(password)
+    if password_error:
+        flash(password_error, "error")
+        return render_template("reset_password.html", token=token, token_valid=True)
+    if password != confirmation:
+        flash("The passwords do not match.", "error")
+        return render_template("reset_password.html", token=token, token_valid=True)
+
+    user = db.session.get(User, token_record.user_id)
+    if user is None:
+        flash("This password reset link is invalid or expired. Request a new one.", "error")
+        return render_template("reset_password.html", token="", token_valid=False)
+
+    now = datetime.now(timezone.utc)
+    claimed = PasswordResetToken.query.filter(
+        PasswordResetToken.id == token_record.id,
+        PasswordResetToken.used_at.is_(None),
+        PasswordResetToken.expires_at > now,
+    ).update({PasswordResetToken.used_at: now}, synchronize_session=False)
+    if claimed != 1:
+        db.session.rollback()
+        flash("This password reset link is invalid or expired. Request a new one.", "error")
+        return render_template("reset_password.html", token="", token_valid=False)
+
+    user.password_hash = generate_password_hash(password, method="scrypt")
+    db.session.commit()
+    session.clear()
+    flash("Your password has been reset. Log in with your new password.", "success")
+    return redirect(url_for("login"))
 
 
 @app.post("/logout")
@@ -812,7 +1022,11 @@ def delete_prompt(template_id):
 @login_required
 def snippets():
     items = SavedSnippet.query.filter_by(owner_id=current_user.id).order_by(SavedSnippet.updated_at.desc()).all()
-    return render_template("snippets.html", snippets=items)
+    return render_template(
+        "snippets.html",
+        snippets=items,
+        languages=sorted(set(LANGUAGE_ALIASES.values())),
+    )
 
 
 @app.route("/api/snippets", methods=["GET", "POST"])

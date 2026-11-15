@@ -36,16 +36,8 @@
     <label class="field"><span>Code snippet (optional)</span>
         <textarea id="codeInput" name="code_input" maxlength="50000" placeholder="Paste existing code here if you want to explain, debug, optimize, or convert it..."></textarea>
     </label>
-    <div class="prompt-chips">
-        <button type="button" class="example-button" data-prompt="Build a Flask REST API with validation and clear error handling.">Build an API</button>
-        <button type="button" class="example-button" data-prompt="Explain this function step by step and point out possible edge cases.">Explain code</button>
-        <button type="button" class="example-button" data-prompt="Find the bug in this function and show a corrected version.">Fix bug</button>
-        <button type="button" class="example-button" data-prompt="Review this SQL query and explain performance considerations.">Improve query</button>
-    </div>
     <div class="button-row">
         <button type="submit" id="askBtn" class="primary-button">✨ Generate</button>
-        <button type="button" id="clearBtn" class="secondary-button">Clear form</button>
-        <button type="button" id="saveSnippetBtn" class="secondary-button">Save code snippet</button>
     </div>
 </form>
 <div id="conversationList" class="conversation-list" aria-live="polite"></div>
